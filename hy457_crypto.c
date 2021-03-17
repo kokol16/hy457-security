@@ -260,7 +260,7 @@ unsigned char **playfair_keymatrix(unsigned char *key)
     sanitize_upper(key);
 
     unsigned char *clean_key = eliminate_duplicates_from_key(key);
-    
+
     int key_length = strlen(clean_key);
     unsigned char *upper_letters = generate_upper_letters_array();
     //memset(ascii_upper_let, 0, 90);
@@ -579,7 +579,7 @@ void rectangle_decrypt(char *letter1, char *letter2, unsigned char **matrix_key)
 
 void sanitize_upper(unsigned char *plaintext)
 {
-    unsigned int valid_input_index=0 , index=0;
+    unsigned int valid_input_index = 0, index = 0;
     while (plaintext[index] != '\0')
     {
         if (!isupper(plaintext[index]))
@@ -683,6 +683,39 @@ void main_playfair(unsigned char *key)
     cipher = playfair_encrypt(key, key_matrix);
     playfair_decrypt(cipher, key_matrix);
 }
+
+uint8_t *affine_encrypt(uint8_t *plaintext)
+{
+    uint8_t *ciphertext;
+    unsigned int index = 0, cipher_index = 0;
+    unsigned int x;
+    unsigned int res;
+    ciphertext = malloc(sizeof(uint8_t) * strlen(plaintext) + 1);
+    while (plaintext[index] != '\0')
+    {
+        if (plaintext[index] > 64 && plaintext[index] < 91)
+        {
+
+            x = plaintext[index] - 65;
+            res = modulo((a * x + b), m);
+
+            ciphertext[cipher_index++] = res + 'A';
+        }
+        index++;
+    }
+    ciphertext[cipher_index] = '\0';
+    return ciphertext;
+}
+uint8_t *affine_decrypt(uint8_t *ciphertext)
+{
+}
+
+void affine_main(unsigned char *plaintext)
+{
+    uint8_t *ciphertext = affine_encrypt(plaintext);
+    print_bytes(stdout, ciphertext);
+}
+
 int main(int argc, char **argv)
 {
     FILE *fp;
@@ -722,6 +755,7 @@ int main(int argc, char **argv)
 
     //main_otp(count_bytes, plaintext);
     //main_ceasar(count_bytes, plaintext);
-    main_playfair(plaintext);
+    //main_playfair(plaintext);
+    affine_main(plaintext);
     return 0;
 }

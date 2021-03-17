@@ -49,6 +49,13 @@ static short is_letters_on_same_col_decrypt(char *letter1, char *letter2, unsign
 static void  rectangle_decrypt(char *letter1, char *letter2, unsigned char **matrix_key);
 static void sanitize_upper(unsigned char *plaintext);
 
+//Affine
+#define a 11
+#define b 19
+#define m 26
+uint8_t * affine_encrypt(uint8_t *plaintext);
+uint8_t * affine_decrypt(uint8_t *ciphertext);
+
 
 //general
 
