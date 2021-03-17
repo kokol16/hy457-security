@@ -595,7 +595,7 @@ void sanitize_upper(unsigned char *plaintext)
 }
 unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key)
 {
-    unsigned char *tmp_plaintext = malloc(sizeof(char) * strlen(plaintext) + 1);
+    unsigned char *tmp_plaintext = malloc(sizeof(char) * (strlen(plaintext) + 1));
     unsigned int index = 0;
     memcpy(tmp_plaintext, plaintext, strlen(plaintext) + 1);
     make_plaintext_even(tmp_plaintext);
@@ -625,7 +625,7 @@ unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key)
 
 unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key)
 {
-    unsigned char *tmp_plaintext = malloc(sizeof(char) * strlen(ciphertext) + 1);
+    unsigned char *tmp_plaintext = malloc(sizeof(char) * (strlen(ciphertext) + 1));
     unsigned int index = 0;
     memcpy(tmp_plaintext, ciphertext, strlen(ciphertext) + 1);
     printf("%c\n", tmp_plaintext[8]);
@@ -690,17 +690,13 @@ uint8_t *affine_encrypt(uint8_t *plaintext)
     unsigned int index = 0, cipher_index = 0;
     unsigned int x;
     unsigned int res;
-    ciphertext = malloc(sizeof(uint8_t) * strlen(plaintext) + 1);
+    ciphertext = malloc(sizeof(uint8_t) * (strlen(plaintext) + 1));
     while (plaintext[index] != '\0')
     {
-        if (plaintext[index] > 64 && plaintext[index] < 91)
-        {
 
-            x = plaintext[index] - 65;
-            res = modulo((a * x + b), m);
-
-            ciphertext[cipher_index++] = res + 'A';
-        }
+        x = plaintext[index] - 65;
+        res = modulo((a * x + b), m);
+        ciphertext[cipher_index++] = res + 'A';
         index++;
     }
     ciphertext[cipher_index] = '\0';
@@ -708,12 +704,31 @@ uint8_t *affine_encrypt(uint8_t *plaintext)
 }
 uint8_t *affine_decrypt(uint8_t *ciphertext)
 {
+    int  x, a_inverse;
+    uint8_t *plaitext_tmp = malloc(sizeof(uint8_t) * (strlen(ciphertext) + 1));
+    unsigned int i = 0, index = 0;
+    for (i = 0; i < m; i++)
+    {
+        if ( modulo ( (a * i) , m )  == 1)
+        {
+            a_inverse = i;
+        }
+    }
+    while (ciphertext[index] != '\0')
+    {
+        plaitext_tmp[index] =     modulo (  a_inverse *  ( ciphertext[index] -65 - b  ) , m) + 65 ;
+        index++;
+    }
+    return plaitext_tmp;
 }
 
 void affine_main(unsigned char *plaintext)
 {
-    uint8_t *ciphertext = affine_encrypt(plaintext);
+    uint8_t *ciphertext, *plain_text;
+    ciphertext = affine_encrypt(plaintext);
     print_bytes(stdout, ciphertext);
+    plain_text = affine_decrypt(ciphertext);
+    print_bytes(stdout, plain_text);
 }
 
 int main(int argc, char **argv)
