@@ -46,7 +46,7 @@ uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key)
 
     return cipher_text;
 }
-uint8_t *generate_otp_key(int length)
+uint8_t *generate__key(int length)
 {
     FILE *fp;
     int ch;
@@ -91,7 +91,7 @@ void print_bytes(FILE *fp, uint8_t *msg)
 void main_otp(unsigned int count_bytes, uint8_t *plaintext)
 {
     uint8_t *key;
-    key = generate_otp_key(count_bytes);
+    key = generate__key(count_bytes);
     if (key == NULL)
     {
         return;
@@ -704,19 +704,19 @@ uint8_t *affine_encrypt(uint8_t *plaintext)
 }
 uint8_t *affine_decrypt(uint8_t *ciphertext)
 {
-    int  x, a_inverse;
+    int x, a_inverse;
     uint8_t *plaitext_tmp = malloc(sizeof(uint8_t) * (strlen(ciphertext) + 1));
     unsigned int i = 0, index = 0;
     for (i = 0; i < m; i++)
     {
-        if ( modulo ( (a * i) , m )  == 1)
+        if (modulo((a * i), m) == 1)
         {
             a_inverse = i;
         }
     }
     while (ciphertext[index] != '\0')
     {
-        plaitext_tmp[index] =     modulo (  a_inverse *  ( ciphertext[index] -65 - b  ) , m) + 65 ;
+        plaitext_tmp[index] = modulo(a_inverse * (ciphertext[index] - 65 - b), m) + 65;
         index++;
     }
     return plaitext_tmp;
@@ -729,6 +729,121 @@ void affine_main(unsigned char *plaintext)
     print_bytes(stdout, ciphertext);
     plain_text = affine_decrypt(ciphertext);
     print_bytes(stdout, plain_text);
+}
+
+uint8_t *feistel_round(uint8_t *block, uint8_t *key)
+{
+    int block_length = strlen(block);
+    int i = 0;
+    uint8_t *cipher_block = malloc(sizeof(uint8_t) * (block_length + 1));
+    for (i = 0; i < S / 2; i++)
+    {
+        cipher_block[i] = modulo((block[i] * key[i]), pow(2, (S / 2)));
+    }
+    cipher_block[i] = '\0';
+    return cipher_block;
+}
+uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2])
+{
+    int round = 0;
+    unsigned int index = 0;
+    uint8_t *tmp, *cipher;
+    uint8_t swap_tmp[S / 2];
+    int plain_size = strlen(plaintext);
+    int blocks_amount = plain_size / S;
+    int block_counter = 0, i = 0;
+    cipher = malloc(sizeof(uint8_t) * (plain_size + 1));
+    memcpy(cipher, plaintext, plain_size + 1);
+
+    while (1)
+    {
+        int left_block = block_counter * S;
+
+        for (round = 0; round < n; round++)
+        {
+            index = 0;
+            tmp = feistel_round(cipher + left_block + S / 2, keys[round]);
+            for (i = left_block; i < left_block + (S / 2); i++) //iterate leftt block
+            {
+                cipher[i] = cipher[i] ^ tmp[index++];
+            }
+            //swap
+            memcpy(swap_tmp, cipher + left_block, S / 2);
+            memcpy(cipher + left_block, (cipher + left_block + S / 2), S / 2);
+            memcpy(cipher + left_block + S / 2, swap_tmp, S / 2);
+
+            /* for (i = left_block; i < left_block + (S / 2); i++) //iterate leftt block
+            {
+                printf ( "%c " , cipher[i]  );
+            }
+            printf("\n");*/
+        }
+        block_counter += 1;
+        if (block_counter >= blocks_amount)
+            break;
+    }
+    cipher[plain_size + 1] = '\0';
+    return cipher;
+}
+uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S / 2])
+{
+    int round = 0;
+    unsigned int index = 0;
+    uint8_t *tmp, *plain;
+    uint8_t swap_tmp[S / 2];
+    int plain_size = strlen(ciphertext);
+    int blocks_amount = plain_size / S;
+    int block_counter = 0, i = 0;
+    plain = malloc(sizeof(uint8_t) * (plain_size + 1));
+    memcpy(plain, ciphertext, plain_size + 1);
+
+    while (1)
+    {
+        int left_block = block_counter * S;
+
+        for (round = n - 1; round >= 0; round--)
+        {  
+            //swap
+            memcpy(swap_tmp, plain + left_block, S / 2);
+            memcpy(plain + left_block, (plain + left_block + S / 2), S / 2);
+            memcpy(plain + left_block + S / 2, swap_tmp, S / 2);
+
+            index = 0;
+            tmp = feistel_round(plain + left_block + S / 2, keys[round]);
+            for (i = left_block; i < left_block + (S / 2); i++) //iterate leftt block
+            {
+                plain[i] = plain[i] ^ tmp[index++];
+            }
+          
+
+            
+        }
+        block_counter += 1;
+        if (block_counter >= blocks_amount)
+            break;
+    }
+    plain[plain_size + 1] = '\0';
+
+    return plain;
+}
+
+void feistel_main(uint8_t *plaintext)
+{
+    uint8_t keys[n][S / 2];
+    uint8_t *cipher , *plain;
+    unsigned int i = 0;
+    for (i = 0; i < n; i++)
+    {
+        memcpy(keys[i], generate__key(S / 2), S / 2); //4 bytes key (32bits)
+    }
+    cipher = feistel_encrypt(plaintext, keys);
+    fprintf(stdout , "ciphertext:");
+    print_bytes(stdout, cipher);
+
+    plain = feistel_decrypt(cipher, keys);
+    fprintf(stdout , "plaintext:");
+    print_bytes(stdout, plain);
+
 }
 
 int main(int argc, char **argv)
@@ -771,6 +886,7 @@ int main(int argc, char **argv)
     //main_otp(count_bytes, plaintext);
     //main_ceasar(count_bytes, plaintext);
     //main_playfair(plaintext);
-    affine_main(plaintext);
+    //affine_main(plaintext);
+    feistel_main(plaintext);
     return 0;
 }
