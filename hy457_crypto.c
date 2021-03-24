@@ -1,5 +1,4 @@
 #include "hy457_crypto.h"
-#define OFFSET 34
 uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key)
 {
     unsigned int index = 0;
@@ -65,6 +64,7 @@ uint8_t *generate__key(int length)
     key[index] = '\0';
     return key;
 }
+
 void print_bytes(FILE *fp, uint8_t *msg)
 {
     if (msg == NULL)
@@ -74,15 +74,19 @@ void print_bytes(FILE *fp, uint8_t *msg)
     uint8_t *tmp_msg = msg;
     while (*tmp_msg != '\0')
     {
+        if (*tmp_msg == '\0')
+        {
+            printf("lala\n");
+        }
         if (isprint(*tmp_msg))
         {
             fprintf(fp, "%c ", *tmp_msg);
         }
         else
         {
-            fprintf(fp, "%c ", *tmp_msg);
+            //fprintf(fp, "%c ", *tmp_msg);
 
-            //fprintf(fp, "%s ", "non_printable ");
+            fprintf(fp, "%s ", "non_printable ");
         }
         tmp_msg++;
     }
@@ -118,25 +122,66 @@ int modulo(int left, int right)
     return ((left % right + right) % right);
 }
 
+uint8_t *create_alphabet()
+{
+    int i = 0;
+    unsigned int index = 0;
+    uint8_t *alphabet = malloc(sizeof(uint8_t) * ALPHABET_SIZE);
+
+    for (i = 0; i < 10; i++)
+    {
+        alphabet[index++] = '0' + i;
+    }
+    for (i = 0; i < 26; i++)
+    {
+        alphabet[index++] = 'A' + i;
+    }
+    for (i = 0; i < 26; i++)
+    {
+        alphabet[index++] = 'a' + i;
+    }
+
+    //printf("lala %s\n",alphabet);
+    print_bytes(stdout, alphabet);
+    return alphabet;
+}
+int *create_indexing_array()
+{
+    int i = 0;
+    unsigned int index = 0;
+    int *indexing = malloc(sizeof(int) * 123);
+
+    for (i = 48; i <= 57; i++)
+    {
+        indexing[i] = index;
+        index++;
+    }
+    for (i = 65; i <= 90; i++)
+    {
+        indexing[i] = index;
+        index++;
+    }
+    for (i = 97; i <= 122; i++)
+    {
+        indexing[i] = index;
+        index++;
+    }
+    printf("index:%d\n", index);
+    return indexing;
+}
 uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N)
 {
     unsigned int index = 0;
     int length = strlen(plaintext) + 1;
     uint8_t *cipher_text = malloc(length * sizeof(uint8_t));
-    while (length >= 0)
+    printf("length:%d\n", length);
+    uint8_t *alphabet = create_alphabet();
+    int *indexing_arr = create_indexing_array();
+    while (length > 1)
     {
-        if (isupper(plaintext[index]))
+        if (isupper(plaintext[index]) || islower(plaintext[index]) || isdigit(plaintext[index]))
         {
-            cipher_text[index] = ((plaintext[index] + N - 65) % 26) + 65;
-        }
-        else if (islower(plaintext[index]))
-        {
-
-            cipher_text[index] = ((plaintext[index] + N - 97) % 26) + 97;
-        }
-        else if (isdigit(plaintext[index]))
-        {
-            cipher_text[index] = ((plaintext[index] + N - 48) % 10) + 48;
+            cipher_text[index] = alphabet[modulo(indexing_arr[plaintext[index]] + N, ALPHABET_SIZE + 1)];
         }
         else
         {
@@ -145,6 +190,8 @@ uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N)
         index++;
         length--;
     }
+    cipher_text[index] = '\0';
+
     //print_bytes(stdout, cipher_text);
 
     return cipher_text;
@@ -154,19 +201,13 @@ uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N)
     unsigned int index = 0;
     int length = strlen(ciphertext) + 1;
     uint8_t *plaintext = malloc(length * sizeof(uint8_t));
-    while (length >= 0)
+    uint8_t *alphabet = create_alphabet();
+    int *indexing_arr = create_indexing_array();
+    while (length > 1)
     {
-        if (isupper(ciphertext[index]))
+        if (isupper(ciphertext[index]) || islower(ciphertext[index]) || isdigit(ciphertext[index]))
         {
-            plaintext[index] = (modulo((ciphertext[index] - N - 65), 26)) + 65;
-        }
-        else if (islower(ciphertext[index]))
-        {
-            plaintext[index] = (modulo((ciphertext[index] - N - 97), 26)) + 97;
-        }
-        else if (isdigit(ciphertext[index]))
-        {
-            plaintext[index] = (modulo((ciphertext[index] - N - 48), 10)) + 48;
+            plaintext[index] = alphabet[modulo(indexing_arr[ciphertext[index]] - N, ALPHABET_SIZE + 1)];
         }
         else
         {
@@ -175,6 +216,7 @@ uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N)
         index++;
         length--;
     }
+    plaintext[index] = '\0';
     return plaintext;
 }
 
@@ -183,8 +225,9 @@ void main_ceasar(unsigned int count_bytes, uint8_t *plaintext)
     uint8_t *ciphertext;
     ciphertext = caesar_encrypt(plaintext, OFFSET);
     plaintext = caesar_decrypt(ciphertext, OFFSET);
-
+    fprintf(stdout, "cipher : ");
     print_bytes(stdout, ciphertext);
+    fprintf(stdout, "plain  : ");
     print_bytes(stdout, plaintext);
 }
 
@@ -733,27 +776,44 @@ void affine_main(unsigned char *plaintext)
 
 uint8_t *feistel_round(uint8_t *block, uint8_t *key)
 {
-    int block_length = strlen(block);
+    //    int block_length = strlen(block);
+
     int i = 0;
-    uint8_t *cipher_block = malloc(sizeof(uint8_t) * (block_length + 1));
+    uint8_t *cipher_block = malloc(sizeof(uint8_t) * (S / 2));
     for (i = 0; i < S / 2; i++)
     {
         cipher_block[i] = modulo((block[i] * key[i]), pow(2, (S / 2)));
     }
-    cipher_block[i] = '\0';
+    //cipher_block[i] = '\0';
     return cipher_block;
 }
 uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2])
 {
     int round = 0;
-    unsigned int index = 0;
+    unsigned int index = 0, j = 0;
     uint8_t *tmp, *cipher;
     uint8_t swap_tmp[S / 2];
+    int padding_size;
     int plain_size = strlen(plaintext);
+    printf("plain_size : %d\n", plain_size);
+    if (plain_size % S != 0)
+    {
+
+        //add padding
+        padding_size = S - (plain_size % S);
+        plaintext = (uint8_t *)realloc(plaintext, plain_size + padding_size);
+        for (j = 0; j < padding_size; j++)
+        {
+            plaintext[j + plain_size] = '\0';
+        }
+        plain_size += padding_size;
+    }
+    printf("plain_size : %d\n", plain_size);
+
+    cipher = malloc(sizeof(uint8_t) * (plain_size + 1));
     int blocks_amount = plain_size / S;
     int block_counter = 0, i = 0;
-    cipher = malloc(sizeof(uint8_t) * (plain_size + 1));
-    memcpy(cipher, plaintext, plain_size + 1);
+    memcpy(cipher, plaintext, plain_size);
 
     while (1)
     {
@@ -771,38 +831,39 @@ uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2])
             memcpy(swap_tmp, cipher + left_block, S / 2);
             memcpy(cipher + left_block, (cipher + left_block + S / 2), S / 2);
             memcpy(cipher + left_block + S / 2, swap_tmp, S / 2);
-
-            /* for (i = left_block; i < left_block + (S / 2); i++) //iterate leftt block
-            {
-                printf ( "%c " , cipher[i]  );
-            }
-            printf("\n");*/
         }
         block_counter += 1;
         if (block_counter >= blocks_amount)
             break;
     }
-    cipher[plain_size + 1] = '\0';
+    cipher[plain_size] = '\0';
     return cipher;
 }
 uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S / 2])
 {
     int round = 0;
-    unsigned int index = 0;
+    unsigned int index = 0, j;
     uint8_t *tmp, *plain;
     uint8_t swap_tmp[S / 2];
     int plain_size = strlen(ciphertext);
-    int blocks_amount = plain_size / S;
+    print_bytes(stdout, ciphertext);
+    printf("plain_size : %d\n", plain_size);
+    if (plain_size % S != 0)
+        plain_size += S - plain_size % S;
+
+    printf("plain_size : %d\n", plain_size);
+
+    int blocks_amount = (plain_size + S - (plain_size % S)) / S;
     int block_counter = 0, i = 0;
     plain = malloc(sizeof(uint8_t) * (plain_size + 1));
-    memcpy(plain, ciphertext, plain_size + 1);
+    memcpy(plain, ciphertext, plain_size);
 
     while (1)
     {
         int left_block = block_counter * S;
 
         for (round = n - 1; round >= 0; round--)
-        {  
+        {
             //swap
             memcpy(swap_tmp, plain + left_block, S / 2);
             memcpy(plain + left_block, (plain + left_block + S / 2), S / 2);
@@ -814,15 +875,12 @@ uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S / 2])
             {
                 plain[i] = plain[i] ^ tmp[index++];
             }
-          
-
-            
         }
         block_counter += 1;
         if (block_counter >= blocks_amount)
             break;
     }
-    plain[plain_size + 1] = '\0';
+    plain[plain_size] = '\0';
 
     return plain;
 }
@@ -830,20 +888,21 @@ uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S / 2])
 void feistel_main(uint8_t *plaintext)
 {
     uint8_t keys[n][S / 2];
-    uint8_t *cipher , *plain;
+    uint8_t *cipher, *plain;
     unsigned int i = 0;
     for (i = 0; i < n; i++)
     {
         memcpy(keys[i], generate__key(S / 2), S / 2); //4 bytes key (32bits)
     }
     cipher = feistel_encrypt(plaintext, keys);
-    fprintf(stdout , "ciphertext:");
+    fprintf(stdout, "ciphertext:");
     print_bytes(stdout, cipher);
+    //fprintf(stdout , "%s\n",cipher);
 
     plain = feistel_decrypt(cipher, keys);
-    fprintf(stdout , "plaintext:");
+    fprintf(stdout, "plaintext:");
     print_bytes(stdout, plain);
-
+    //fprintf(stdout , "%s\n",plain);
 }
 
 int main(int argc, char **argv)
@@ -884,9 +943,9 @@ int main(int argc, char **argv)
     }
 
     //main_otp(count_bytes, plaintext);
-    //main_ceasar(count_bytes, plaintext);
+    main_ceasar(count_bytes, plaintext);
     //main_playfair(plaintext);
     //affine_main(plaintext);
-    feistel_main(plaintext);
+    //feistel_main(plaintext);
     return 0;
 }

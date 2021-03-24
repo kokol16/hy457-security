@@ -1,0 +1,59 @@
+uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N)
+{
+    unsigned int index = 0;
+    int length = strlen(plaintext) + 1;
+    uint8_t *cipher_text = malloc(length * sizeof(uint8_t));
+    while (length >= 0)
+    {
+        if (isupper(plaintext[index]))
+        {
+            cipher_text[index] = ((plaintext[index] + N - 65) % 26) + 65;
+        }
+        else if (islower(plaintext[index]))
+        {
+
+            cipher_text[index] = ((plaintext[index] + N - 97) % 26) + 97;
+        }
+        else if (isdigit(plaintext[index]))
+        {
+            cipher_text[index] = ((plaintext[index] + N - 48) % 10) + 48;
+        }
+        else
+        {
+            cipher_text[index] = plaintext[index];
+        }
+        index++;
+        length--;
+    }
+    //print_bytes(stdout, cipher_text);
+
+    return cipher_text;
+}
+uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N)
+{
+    unsigned int index = 0;
+    int length = strlen(ciphertext) + 1;
+    uint8_t *plaintext = malloc(length * sizeof(uint8_t));
+    while (length >= 0)
+    {
+        if (isupper(ciphertext[index]))
+        {
+            plaintext[index] = (modulo((ciphertext[index] - N - 65), 26)) + 65;
+        }
+        else if (islower(ciphertext[index]))
+        {
+            plaintext[index] = (modulo((ciphertext[index] - N - 97), 26)) + 97;
+        }
+        else if (isdigit(ciphertext[index]))
+        {
+            plaintext[index] = (modulo((ciphertext[index] - N - 48), 10)) + 48;
+        }
+        else
+        {
+            plaintext[index] = ciphertext[index];
+        }
+        index++;
+        length--;
+    }
+    return plaintext;
+}

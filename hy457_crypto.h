@@ -14,7 +14,8 @@ uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key);
 uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key);
 
 //ceasar
-
+#define OFFSET 4
+#define ALPHABET_SIZE 61
 uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N);
 uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N);
 static int modulo(int left, int right);
