@@ -12,6 +12,7 @@
 //otp
 uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key);
 uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key);
+uint8_t *otp_sanitize_input(uint8_t * plaintext);
 
 //ceasar
 #define OFFSET 4
@@ -56,6 +57,7 @@ static void sanitize_upper(unsigned char *plaintext);
 #define m 26
 uint8_t *affine_encrypt(uint8_t *plaintext);
 uint8_t *affine_decrypt(uint8_t *ciphertext);
+uint8_t *affine_sanitize_input(uint8_t *plaintext);
 
 //feister cipher
 #define n 8
@@ -66,7 +68,9 @@ uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S/2]);
 
 //general
 
+static void print_with_space(FILE *fp, uint8_t *msg);
 static void print_bytes(FILE *fp, uint8_t *msg);
+
 static int isslash(uint8_t *text, unsigned int index);
 static uint8_t *generate__key(int length);
 

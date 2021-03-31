@@ -1,1 +1,1 @@
-aeka\0ra
+aek a\0rA
