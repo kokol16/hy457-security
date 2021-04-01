@@ -10,15 +10,15 @@
 #define PLAYFAIR_COL 5
 
 //otp
-uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key);
-uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key);
-uint8_t *otp_sanitize_input(uint8_t * plaintext);
+uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key , unsigned int plain_size);
+uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key , unsigned int plain_size );
+uint8_t *otp_sanitize_input(uint8_t * plaintext,unsigned int plain_size);
 
 //ceasar
 #define OFFSET 4
 #define ALPHABET_SIZE 61
-uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N);
-uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N);
+uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N,unsigned int plain_size);
+uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N,unsigned int plain_size);
 static int modulo(int left, int right);
 
 //playfair
@@ -27,9 +27,7 @@ typedef struct letter_position
      int row;
      int col;
 } letter_position;
-short is_even_v = 0;
-unsigned int *replaced_with_X;
-short int *replaced_with_I;
+
 
 unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key);
 unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key);
@@ -63,8 +61,8 @@ uint8_t *affine_sanitize_input(uint8_t *plaintext);
 #define n 8
 #define S 8 //(64 bits)
 uint8_t *feistel_round(uint8_t *block, uint8_t *key);
-uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S/2]);
-uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S/2]);
+uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S/2],unsigned int plain_size);
+uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S/2],unsigned int plain_size);
 
 //general
 
