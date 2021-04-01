@@ -3,8 +3,8 @@ uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key, unsigned int plain_size)
 {
     unsigned int index = 0, length;
     uint8_t *plaintext = malloc(plain_size * sizeof(uint8_t));
-    length=plain_size;
-    while (length >= 0)
+    length = plain_size;
+    while (length > 0)
     {
         plaintext[index] = ciphertext[index] ^ key[index];
         index++;
@@ -13,16 +13,16 @@ uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key, unsigned int plain_size)
     return plaintext;
 }
 
-uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key , unsigned int plain_size )
+uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key, unsigned int plain_size)
 {
-    unsigned int index = 0 , length=0;
+    unsigned int index = 0, length = 0;
     uint8_t *cipher_text;
     //uint8_t *cipher_text = malloc(length * sizeof(uint8_t));
-    uint8_t *plain_sanitized = otp_sanitize_input(plaintext , plain_size);
-    length= plain_size;
+    uint8_t *plain_sanitized = otp_sanitize_input(plaintext, plain_size);
+    length = plain_size;
     cipher_text = malloc(sizeof(uint8_t) * plain_size);
 
-    while (length >= 0)
+    while (length > 0)
     {
 
         cipher_text[index] = plain_sanitized[index] ^ key[index];
@@ -32,14 +32,15 @@ uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key , unsigned int plain_size 
 
     return cipher_text;
 }
-uint8_t *otp_sanitize_input(uint8_t *plaintext , unsigned int plain_size)
+uint8_t *otp_sanitize_input(uint8_t *plaintext, unsigned int plain_size)
 {
     uint8_t *sanitized_plain;
     unsigned int index = 0, sanit_index = 0;
-    int length = (strlen(plaintext) + 1);
+    int length = plain_size;
+
     sanitized_plain = malloc(sizeof(uint8_t) * length);
     memcpy(sanitized_plain, plaintext, length);
-    while (plaintext[index] != '\0')
+    while (index < length)
     {
         if (islower(plaintext[index]) || isupper(plaintext[index]) || isdigit(plaintext[index]))
         {
@@ -48,9 +49,37 @@ uint8_t *otp_sanitize_input(uint8_t *plaintext , unsigned int plain_size)
 
         index++;
     }
-    fprintf(stdout, "plaintext after sanitization :");
-    print_with_space(stdout, sanitized_plain);
+    if (sanit_index < length - 1)
+    {
+        memset(sanitized_plain + sanit_index, 0, length - sanit_index);
+    }
+
+    fprintf(stdout, "\n========SANITIZED PLAINTEXT=============  \n\n");
+    fprintf(stdout, "========normal========================== \n");
+    print_by_size(stdout, sanitized_plain, plain_size, 0);
+
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, sanitized_plain, plain_size, 1);
     return sanitized_plain;
+}
+void print_by_size(FILE *fp, uint8_t *msg, unsigned int size, short AsBytes)
+{
+    if (msg == NULL)
+    {
+        return;
+    }
+
+    unsigned int index = 0;
+    while (index < size)
+    {
+        if (AsBytes)
+            fprintf(fp, "%x", msg[index]);
+        else
+            fprintf(fp, "%c", msg[index]);
+        index++;
+    }
+    fprintf(fp, "%c", '\n');
 }
 uint8_t *generate__key(int length)
 {
@@ -109,14 +138,24 @@ void main_otp(unsigned int count_bytes, uint8_t *plaintext, unsigned int plain_s
     }
     fprintf(stdout, "%c", '\n');
 
-    uint8_t *ciphertext = otp_encrypt(plaintext, key,plain_size);
-    fprintf(stdout, "ciphertext: ");
+    uint8_t *ciphertext = otp_encrypt(plaintext, key, plain_size);
+    fprintf(stdout, "\n========CIPHERTEXT=======================  \n\n");
+    fprintf(stdout, "========normal========================== \n");
+    print_by_size(stdout, ciphertext, count_bytes, 0);
 
-    print_bytes(stdout, ciphertext);
+    fprintf(stdout, "========hex============================= \n");
 
-    plaintext = otp_decrypt(ciphertext, key,plain_size);
-    fprintf(stdout, "plaintext:  ");
-    print_with_space(stdout, plaintext);
+    print_by_size(stdout, ciphertext, count_bytes, 1);
+
+    plaintext = otp_decrypt(ciphertext, key, plain_size);
+    fprintf(stdout, "\n========PLAINTEXT=======================  \n\n");
+
+    fprintf(stdout, "========normal========================== \n");
+
+    print_by_size(stdout, plaintext, count_bytes, 0);
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, plaintext, count_bytes, 1);
 
     //close files
     //free memory
@@ -183,7 +222,7 @@ uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N, unsigned int plain_size)
     uint8_t *cipher_text = malloc(length * sizeof(uint8_t));
     uint8_t *alphabet = create_alphabet();
     int *indexing_arr = create_indexing_array();
-    while (length >= 1)
+    while (length > 0)
     {
         if (isupper(plaintext[index]) || islower(plaintext[index]) || isdigit(plaintext[index]))
         {
@@ -196,17 +235,17 @@ uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N, unsigned int plain_size)
         index++;
         length--;
     }
-
+    //printf("lala: %c",cipher_text[0]);
     return cipher_text;
 }
-uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N , unsigned int plain_size)
+uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N, unsigned int plain_size)
 {
     unsigned int index = 0;
     int length = plain_size;
     uint8_t *plaintext = malloc(length * sizeof(uint8_t));
     uint8_t *alphabet = create_alphabet();
     int *indexing_arr = create_indexing_array();
-    while (length >= 1)
+    while (length > 0)
     {
         if (isupper(ciphertext[index]) || islower(ciphertext[index]) || isdigit(ciphertext[index]))
         {
@@ -219,21 +258,39 @@ uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N , unsigned int plain_size)
         index++;
         length--;
     }
+    //printf("lala2: %c",plaintext[0]);
+
     return plaintext;
 }
 
 void main_ceasar(unsigned int count_bytes, uint8_t *plaintext)
 {
     uint8_t *ciphertext;
-    int offset;
-    fprintf(stdout, "insert offset : ");
-    scanf("%d",&offset);
-    ciphertext = caesar_encrypt(plaintext, offset,count_bytes);
-    plaintext = caesar_decrypt(ciphertext, offset,count_bytes);
-    fprintf(stdout, "cipher : ");
-    print_with_space(stdout, ciphertext);
-    fprintf(stdout, "plain  : ");
-    print_with_space(stdout, plaintext);
+    int offset = 3;
+
+    fprintf(stdout, "insert offset :");
+    scanf("%d", &offset);
+    ciphertext = caesar_encrypt(plaintext, offset, count_bytes);
+    plaintext = caesar_decrypt(ciphertext, offset, count_bytes);
+
+    fprintf(stdout, "\n========CIPHERTEXT=======================  \n\n");
+    fprintf(stdout, "========normal========================== \n");
+    print_by_size(stdout, ciphertext, count_bytes, 0);
+
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, ciphertext, count_bytes, 1);
+    fprintf(stdout, "\n========PLAINTEXT=======================  \n\n");
+
+    fprintf(stdout, "========normal========================== \n");
+
+    print_by_size(stdout, plaintext, count_bytes, 0);
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, plaintext, count_bytes, 1);
+
+    free(plaintext);
+    free(ciphertext);
 }
 
 unsigned char *eliminate_duplicates_from_key(unsigned char *key)
@@ -299,16 +356,15 @@ void print_matrix(unsigned char **matrix)
         fprintf(stdout, "%s", "\n-----\n");
     }
 }
-unsigned char **playfair_keymatrix(unsigned char *key)
+unsigned char **playfair_keymatrix(unsigned char *key, unsigned int size)
 {
     unsigned char **key_matrix = allocate_matrix(PLAYFAIR_ROW, PLAYFAIR_COL);
     unsigned short row = 0, col = 0, index = 0;
     int ascii_upper_let[91] = {0};
     unsigned int pos = 0;
 
-    sanitize_upper(key);
-    printf("key is : %s\n",key);
-
+    //sanitize_upper(key, size);
+    print_by_size(stdout, key, size, 0);
     unsigned char *clean_key = eliminate_duplicates_from_key(key);
 
     int key_length = strlen(clean_key);
@@ -369,29 +425,18 @@ unsigned char **playfair_keymatrix(unsigned char *key)
     return key_matrix;
 }
 
-short is_even(unsigned char *plaintext)
+void make_plaintext_even(unsigned char *plaintext, unsigned int size)
 {
-    return strlen(plaintext) % 2 == 0;
-}
-void make_plaintext_even(unsigned char *plaintext)
-{
-    int plaintext_length = 0;
-    plaintext_length = strlen(plaintext);
-    if (!is_even(plaintext))
-    {
-
-        plaintext = (char *)realloc(plaintext, plaintext_length + 2);
-        memcpy(plaintext + plaintext_length, "X", 1);
-        memcpy(plaintext + plaintext_length + 1, "\0", 1);
-        plaintext_length += 1;
-    }
-    
+    printf("size : %u\n", size);
+    plaintext = (char *)realloc(plaintext, size + 1);
+    printf("lala\n");
+    memcpy(plaintext + size, "X", 1);
 }
 
-void make_J_to_I(unsigned char *plaintext)
+void make_J_to_I(unsigned char *plaintext, unsigned int size)
 {
     unsigned int index = 0;
-    while (plaintext[index] != 0)
+    while (index < size)
     {
         if (plaintext[index] == 'J')
         {
@@ -401,12 +446,10 @@ void make_J_to_I(unsigned char *plaintext)
     }
 }
 
-
-
-void add_X_on_duplicates(unsigned char *plaintext)
+void add_X_on_duplicates(unsigned char *plaintext, unsigned int size)
 {
     unsigned int index = 0, x_index = 0;
-    while (plaintext[index] != '\0')
+    while (index < size)
     {
         if (plaintext[index] == plaintext[index + 1])
         {
@@ -624,34 +667,41 @@ void rectangle_decrypt(char *letter1, char *letter2, unsigned char **matrix_key)
     *letter2 = matrix_key[let2_pos.row][let1_pos.col];
 }
 
-void sanitize_upper(unsigned char *plaintext)
+void sanitize_upper(unsigned char *plaintext, unsigned int size)
 {
     unsigned int valid_input_index = 0, index = 0;
 
-    while (plaintext[index] != '\0')
+    while (index < size)
     {
-        
+
         if (isupper(plaintext[index]))
         {
             plaintext[valid_input_index++] = plaintext[index];
         }
-        else 
+        else
         {
-            printf("warning plaintext conntains non upper characters\n");    
+            printf("warning plaintext conntains non upper characters\n");
         }
         index++;
     }
-    plaintext[valid_input_index] = '\0';
+    memset(plaintext + valid_input_index, 0, size - valid_input_index);
 }
-unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key)
+unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key, unsigned int size)
 {
-    unsigned char *tmp_plaintext = malloc(sizeof(char) * (strlen(plaintext) + 1));
+    unsigned char *tmp_plaintext;
     unsigned int index = 0;
-    memcpy(tmp_plaintext, plaintext, strlen(plaintext) + 1);
-    make_plaintext_even(tmp_plaintext);
-    add_X_on_duplicates(tmp_plaintext);
-    make_J_to_I(tmp_plaintext);
-    while (tmp_plaintext[index] != '\0')
+    if (size % 2 != 0)
+    {
+        make_plaintext_even(plaintext, size);
+        size += 1;
+    }
+    tmp_plaintext = malloc(sizeof(char) * size);
+    memcpy(tmp_plaintext, plaintext, size);
+    print_by_size(stdout, tmp_plaintext, size, 1);
+
+    add_X_on_duplicates(tmp_plaintext, size);
+    make_J_to_I(tmp_plaintext, size);
+    while (index < size)
     {
         if (is_letters_on_same_row(&tmp_plaintext[index], &tmp_plaintext[index + 1], key))
         {
@@ -666,24 +716,29 @@ unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key)
         index += 2;
     }
 
-    printf("cipher : ");
+    //printf("cipher : ");
 
-    print_with_space(stdout, tmp_plaintext);
+    //print_with_space(stdout, tmp_plaintext);
 
     return tmp_plaintext;
 }
 
-unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key)
+unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key, unsigned int size)
 {
-    unsigned char *tmp_plaintext = malloc(sizeof(char) * (strlen(ciphertext) + 1));
+    unsigned char *tmp_plaintext;
     unsigned int index = 0;
-    memcpy(tmp_plaintext, ciphertext, strlen(ciphertext) + 1);
-    printf("%c\n", tmp_plaintext[8]);
-    printf("%c\n", tmp_plaintext[9]);
-    printf("%c\n", tmp_plaintext[10]);
-
-    while (tmp_plaintext[index] != '\0')
+    if (size % 2 != 0)
     {
+        size += 1;
+    }
+
+    tmp_plaintext = malloc(sizeof(char) * size);
+
+    memcpy(tmp_plaintext, ciphertext, size);
+
+    while (index < size)
+    {
+        //printf("index %u\n",index);
         if (is_letters_on_same_row_decrypt(&tmp_plaintext[index], &tmp_plaintext[index + 1], key))
         {
         }
@@ -696,50 +751,67 @@ unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key)
         }
         index += 2;
     }
-    size_t plain_len = strlen(tmp_plaintext);
-
-    
-
-    printf("plain : ");
-
-    print_with_space(stdout, tmp_plaintext);
-
     return tmp_plaintext;
 }
-void main_playfair(unsigned char *key)
+void main_playfair(unsigned char *key, unsigned int size)
 {
     unsigned char **key_matrix;
-    unsigned char *cipher;
+    unsigned char *ciphertext, *plaintext;
     fprintf(stdout, "matrix : \n");
-    key_matrix = playfair_keymatrix(key);
+    key_matrix = playfair_keymatrix(key, size);
     print_matrix(key_matrix);
-    cipher = playfair_encrypt(key, key_matrix);
-    playfair_decrypt(cipher, key_matrix);
+
+    ciphertext = playfair_encrypt(key, key_matrix, size);
+    plaintext = playfair_decrypt(ciphertext, key_matrix, size);
+
+    fprintf(stdout, "\n========CIPHERTEXT=======================  \n\n");
+    fprintf(stdout, "========normal========================== \n");
+    print_by_size(stdout, ciphertext, size, 0);
+
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, ciphertext, size, 1);
+    fprintf(stdout, "\n========PLAINTEXT=======================  \n\n");
+
+    fprintf(stdout, "========normal========================== \n");
+
+    print_by_size(stdout, plaintext, size, 0);
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, plaintext, size, 1);
+
+    //free(plaintext);
+    //free(ciphertext);
 }
 
-uint8_t *affine_encrypt(uint8_t *plaintext)
+uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
 {
     uint8_t *ciphertext;
     unsigned int index = 0, cipher_index = 0;
     unsigned int x;
     unsigned int res;
-    uint8_t *plain_sanitized = affine_sanitize_input(plaintext);
-    ciphertext = malloc(sizeof(uint8_t) * (strlen(plain_sanitized) + 1));
-    while (plain_sanitized[index] != '\0')
+    //uint8_t *plain_sanitized = affine_sanitize_input(plaintext, size);
+    ciphertext = malloc(sizeof(uint8_t) * size);
+    while (index < size)
     {
-
-        x = plain_sanitized[index] - 65;
-        res = modulo((a * x + b), m);
-        ciphertext[cipher_index++] = res + 'A';
+        if (isupper(plaintext[index]))
+        {
+            x = plaintext[index] - 65;
+            res = modulo((a * x + b), m);
+            ciphertext[cipher_index++] = res + 'A';
+        }
+        else
+        {
+            ciphertext[cipher_index++] = plaintext[index];
+        }
         index++;
     }
-    ciphertext[cipher_index] = '\0';
     return ciphertext;
 }
-uint8_t *affine_decrypt(uint8_t *ciphertext)
+uint8_t *affine_decrypt(uint8_t *ciphertext, unsigned int size)
 {
     int x, a_inverse;
-    uint8_t *plaitext_tmp = malloc(sizeof(uint8_t) * (strlen(ciphertext) + 1));
+    uint8_t *plaitext_tmp = malloc(sizeof(uint8_t) * size);
     unsigned int i = 0, index = 0;
     for (i = 0; i < m; i++)
     {
@@ -748,47 +820,43 @@ uint8_t *affine_decrypt(uint8_t *ciphertext)
             a_inverse = i;
         }
     }
-    while (ciphertext[index] != '\0')
+    while (index < size)
     {
-        plaitext_tmp[index] = modulo(a_inverse * (ciphertext[index] - 65 - b), m) + 65;
+
+        if (isupper(ciphertext[index]))
+        {
+            plaitext_tmp[index] = modulo(a_inverse * (ciphertext[index] - 65 - b), m) + 65;
+        }
+        else
+        {
+            plaitext_tmp[index] = ciphertext[index];
+        }
         index++;
     }
     return plaitext_tmp;
 }
 
-uint8_t *affine_sanitize_input(uint8_t *plaintext)
-{
-    uint8_t *sanitized_plain;
-    unsigned int index = 0, sanit_index = 0;
-    int length = (strlen(plaintext) + 1);
-    sanitized_plain = malloc(sizeof(uint8_t) * length);
-    memcpy(sanitized_plain, plaintext, length);
-    while (plaintext[index] != '\0')
-    {
-        if (islower(plaintext[index]))
-        {
-            sanitized_plain[sanit_index++] = toupper(plaintext[index]);
-        }
-        else if (isupper(plaintext[index]))
-        {
-            sanitized_plain[sanit_index++] = plaintext[index];
-        }
-
-        index++;
-    }
-    sanitized_plain[sanit_index] = '\0';
-    fprintf(stdout, "plaintext after sanitization :");
-    print_with_space(stdout, sanitized_plain);
-    return sanitized_plain;
-}
-
-void affine_main(unsigned char *plaintext)
+void affine_main(unsigned char *plaintext, unsigned int size)
 {
     uint8_t *ciphertext, *plain_text;
-    ciphertext = affine_encrypt(plaintext);
-    print_with_space(stdout, ciphertext);
-    plain_text = affine_decrypt(ciphertext);
-    print_with_space(stdout, plain_text);
+    ciphertext = affine_encrypt(plaintext, size);
+    plain_text = affine_decrypt(ciphertext, size);
+
+    fprintf(stdout, "\n========CIPHERTEXT=======================  \n\n");
+    fprintf(stdout, "========normal========================== \n");
+    print_by_size(stdout, ciphertext, size, 0);
+
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, ciphertext, size, 1);
+    fprintf(stdout, "\n========PLAINTEXT=======================  \n\n");
+
+    fprintf(stdout, "========normal========================== \n");
+
+    print_by_size(stdout, plain_text, size, 0);
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, plain_text, size, 1);
 }
 
 uint8_t *feistel_round(uint8_t *block, uint8_t *key)
@@ -802,7 +870,7 @@ uint8_t *feistel_round(uint8_t *block, uint8_t *key)
     }
     return cipher_block;
 }
-uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2],unsigned int size)
+uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2], unsigned int size)
 {
     int round = 0;
     unsigned int index = 0, j = 0;
@@ -810,7 +878,6 @@ uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2],unsigned int 
     uint8_t swap_tmp[S / 2];
     int padding_size;
     int plain_size = size;
-    printf("plain_size : %d\n", size);
     if (plain_size % S != 0)
     {
 
@@ -823,7 +890,6 @@ uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2],unsigned int 
         }
         plain_size += padding_size;
     }
-    printf("plain_size : %d\n", plain_size);
 
     cipher = malloc(sizeof(uint8_t) * (plain_size + 1));
     int blocks_amount = plain_size / S;
@@ -853,19 +919,15 @@ uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2],unsigned int 
     }
     return cipher;
 }
-uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S / 2],unsigned int size)
+uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S / 2], unsigned int size)
 {
     int round = 0;
     unsigned int index = 0, j;
     uint8_t *tmp, *plain;
     uint8_t swap_tmp[S / 2];
     int plain_size = size;
-    print_with_space(stdout, ciphertext);
-    printf("plain_size : %d\n", plain_size);
     if (plain_size % S != 0)
         plain_size += S - plain_size % S;
-
-    printf("plain_size : %d\n", plain_size);
 
     int blocks_amount = (plain_size + S - (plain_size % S)) / S;
     int block_counter = 0, i = 0;
@@ -899,7 +961,7 @@ uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S / 2],unsigned int
     return plain;
 }
 
-void feistel_main(uint8_t *plaintext , unsigned int size)
+void feistel_main(uint8_t *plaintext, unsigned int size)
 {
     uint8_t keys[n][S / 2];
     uint8_t *cipher, *plain;
@@ -908,15 +970,23 @@ void feistel_main(uint8_t *plaintext , unsigned int size)
     {
         memcpy(keys[i], generate__key(S / 2), S / 2); //4 bytes key (32bits)
     }
-    cipher = feistel_encrypt(plaintext, keys,size);
-    fprintf(stdout, "ciphertext:");
-    print_with_space(stdout, cipher);
-    //fprintf(stdout , "%s\n",cipher);
+    cipher = feistel_encrypt(plaintext, keys, size);
+    plain = feistel_decrypt(cipher, keys, size);
+    fprintf(stdout, "\n========CIPHERTEXT=======================  \n\n");
+    fprintf(stdout, "========normal========================== \n");
+    print_by_size(stdout, cipher, size, 0);
 
-    plain = feistel_decrypt(cipher, keys,size);
-    fprintf(stdout, "plaintext:");
-    print_with_space(stdout, plain);
-    //fprintf(stdout , "%s\n",plain);
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, cipher, size, 1);
+    fprintf(stdout, "\n========PLAINTEXT=======================  \n\n");
+
+    fprintf(stdout, "========normal========================== \n");
+
+    print_by_size(stdout, plain, size, 0);
+    fprintf(stdout, "========hex============================= \n");
+
+    print_by_size(stdout, plain, size, 1);
 }
 
 int main(int argc, char **argv)
@@ -924,7 +994,7 @@ int main(int argc, char **argv)
     FILE *fp;
     uint8_t *plaintext;
     int ch;
-    int choice=0;
+    int choice = 0;
     unsigned int count_bytes = 0, index = 0;
     if (argc > 1)
     {
@@ -957,12 +1027,12 @@ int main(int argc, char **argv)
         count_bytes = strlen(plaintext);
     }
 
-    fprintf(stdout, "press 1. for one time pad \npress 2. for ceasar \npress 3. for playfair \npress 4. for affine  \npress 5. for feistel\n ");
+    fprintf(stdout, "press 1. for one time pad \npress 2. for ceasar \npress 3. for playfair \npress 4. for affine  \npress 5. for feistel\n");
     scanf("%d", &choice);
     switch (choice)
     {
     case 1:
-        main_otp(count_bytes, plaintext,count_bytes);
+        main_otp(count_bytes, plaintext, count_bytes);
         break;
 
     case 2:
@@ -970,15 +1040,15 @@ int main(int argc, char **argv)
         break;
 
     case 3:
-        main_playfair(plaintext);
+        main_playfair(plaintext, count_bytes);
         break;
 
     case 4:
-        affine_main(plaintext);
+        affine_main(plaintext, count_bytes);
         break;
 
     case 5:
-        feistel_main(plaintext,count_bytes);
+        feistel_main(plaintext, count_bytes);
         break;
 
     default:
