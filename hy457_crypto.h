@@ -66,7 +66,6 @@ uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S/2],unsigned int p
 
 //general
 
-static void print_with_space(FILE *fp, uint8_t *msg);
 static void print_bytes(FILE *fp, uint8_t *msg);
 static void print_by_size(FILE *fp, uint8_t *msg , unsigned int size, short AsBytes);
 

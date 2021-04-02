@@ -1,4 +1,13 @@
 #include "hy457_crypto.h"
+
+/**
+ * @brief This method decrypts cipher using OTP algorihm
+ * 
+ * @param ciphertext the text to be decrypted
+ * @param key the key which the plaintext got encrypted
+ * @param plain_size the size of the ciphertext
+ * @return uint8_t* The original plaintext
+ */
 uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key, unsigned int plain_size)
 {
     unsigned int index = 0, length;
@@ -13,6 +22,15 @@ uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key, unsigned int plain_size)
     return plaintext;
 }
 
+/**
+ * @brief This method encrypts cipher using OTP algorihm
+ * IF the plaintext contains invalid characters the characters
+ * will get eliminated
+ * @param plaintext  the text to be encrypted
+ * @param key key the key which the plaintext will get encrypted
+ * @param plain_size  the size of the plaintext
+ * @return uint8_t* The encrypted  plaintext
+ */
 uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key, unsigned int plain_size)
 {
     unsigned int index = 0, length = 0;
@@ -32,6 +50,15 @@ uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key, unsigned int plain_size)
 
     return cipher_text;
 }
+/**
+ * @brief This method is used to sanitize and remove special characters
+ * from the plaintext. 
+ * example : lala\1!@ -> lala1(the rest will get filled with \0 so the size
+ * remain the same)
+ * @param plaintext The text go get sanitized
+ * @param plain_size The size of the text
+ * @return uint8_t* The plaintext after sanitization
+ */
 uint8_t *otp_sanitize_input(uint8_t *plaintext, unsigned int plain_size)
 {
     uint8_t *sanitized_plain;
@@ -63,6 +90,14 @@ uint8_t *otp_sanitize_input(uint8_t *plaintext, unsigned int plain_size)
     print_by_size(stdout, sanitized_plain, plain_size, 1);
     return sanitized_plain;
 }
+/**
+ * @brief This method prints the input message by the size 
+ * IT doesn't count on NULL terminated strings
+ * @param fp The stream that the data will be written
+ * @param msg The message textt
+ * @param size The size of the message
+ * @param AsBytes Option to print the text in hex %x
+ */
 void print_by_size(FILE *fp, uint8_t *msg, unsigned int size, short AsBytes)
 {
     if (msg == NULL)
@@ -81,6 +116,12 @@ void print_by_size(FILE *fp, uint8_t *msg, unsigned int size, short AsBytes)
     }
     fprintf(fp, "%c", '\n');
 }
+/**
+ * @brief This method generates a random key using /dev/random file
+ * 
+ * @param length The length of the key to be generated
+ * @return uint8_t* returns the key
+ */
 uint8_t *generate__key(int length)
 {
     FILE *fp;
@@ -101,33 +142,13 @@ uint8_t *generate__key(int length)
     return key;
 }
 
-void print_with_space(FILE *fp, uint8_t *msg)
-{
-    if (msg == NULL)
-    {
-        return;
-    }
-    uint8_t *tmp_msg = msg;
-    while (*tmp_msg != '\0')
-    {
-        if (*tmp_msg == '\0')
-        {
-            printf("lala\n");
-        }
-        if (isprint(*tmp_msg))
-        {
-            fprintf(fp, "%c ", *tmp_msg);
-        }
-        else
-        {
-            //fprintf(fp, "%c ", *tmp_msg);
-
-            fprintf(fp, "%s ", "non_printable ");
-        }
-        tmp_msg++;
-    }
-    fprintf(fp, "%c", '\n');
-}
+/**
+ * @brief main program for OTP algorithm
+ * 
+ * @param count_bytes The size of the plaintext
+ * @param plaintext The plaintext to get encrypted
+ * @param plain_size 
+ */
 void main_otp(unsigned int count_bytes, uint8_t *plaintext, unsigned int plain_size)
 {
     uint8_t *key;
@@ -163,11 +184,24 @@ void main_otp(unsigned int count_bytes, uint8_t *plaintext, unsigned int plain_s
     free(plaintext);
 }
 
+/**
+ * @brief This method is The mathematical MOD operation
+ * 
+ * @param left 
+ * @param right 
+ * @return int The result of the left mod right
+ */
 int modulo(int left, int right)
 {
     return ((left % right + right) % right);
 }
 
+/**
+ * @brief This method creates an alphabet that
+ * contains numbers , lower and upper cases
+ * [0-9][A-Z][a-z]
+ * @return uint8_t* returns the alphabet
+ */
 uint8_t *create_alphabet()
 {
     int i = 0;
@@ -187,10 +221,15 @@ uint8_t *create_alphabet()
         alphabet[index++] = 'a' + i;
     }
 
-    //printf("lala %s\n",alphabet);
-    //print_with_space(stdout, alphabet);
     return alphabet;
 }
+/**
+ * @brief This method creates an array
+ * that match each number,lower , upper case
+ * to our alphabet array index
+ * example : indexing['A']=10 -> alphabet[10]='A'
+ * @return int* 
+ */
 int *create_indexing_array()
 {
     int i = 0;
@@ -215,6 +254,14 @@ int *create_indexing_array()
     //printf("index:%d\n", index);
     return indexing;
 }
+/**
+ * @brief This method encrypt a plaintext using ceasars algorithm
+ * 
+ * @param plaintext The text to get encrypted
+ * @param N The shift that each byte will get
+ * @param plain_size The size of the plaintext
+ * @return uint8_t* the encryped plaintext
+ */
 uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N, unsigned int plain_size)
 {
     unsigned int index = 0;
@@ -238,6 +285,15 @@ uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N, unsigned int plain_size)
     //printf("lala: %c",cipher_text[0]);
     return cipher_text;
 }
+
+/**
+ * @brief This method decrypt a plaintext using ceasars algorithm
+ * NOTE : invalid characters won't get encrypted 
+ * @param ciphertext The encrypted text
+ * @param N The shift that each byte will get
+ * @param plain_size The size of the ciphertext
+ * @return uint8_t* the original plaintext
+ */
 uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N, unsigned int plain_size)
 {
     unsigned int index = 0;
@@ -249,7 +305,7 @@ uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N, unsigned int plain_size)
     {
         if (isupper(ciphertext[index]) || islower(ciphertext[index]) || isdigit(ciphertext[index]))
         {
-            plaintext[index] = alphabet[modulo(indexing_arr[ciphertext[index]] - N, ALPHABET_SIZE + 1)];
+            plaintext[index] = alphabet[modulo(indexing_arr[ciphertext[index]] - N, ALPHABET_SIZE + 1)]; 
         }
         else
         {
@@ -258,11 +314,15 @@ uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N, unsigned int plain_size)
         index++;
         length--;
     }
-    //printf("lala2: %c",plaintext[0]);
-
     return plaintext;
 }
 
+/**
+ * @brief main program for Ceasar algorithm
+ * 
+ * @param count_bytes The size of the plaintext
+ * @param plaintext The text to get encrypted
+ */
 void main_ceasar(unsigned int count_bytes, uint8_t *plaintext)
 {
     uint8_t *ciphertext;
@@ -427,9 +487,7 @@ unsigned char **playfair_keymatrix(unsigned char *key, unsigned int size)
 
 void make_plaintext_even(unsigned char *plaintext, unsigned int size)
 {
-    printf("size : %u\n", size);
     plaintext = (char *)realloc(plaintext, size + 1);
-    printf("lala\n");
     memcpy(plaintext + size, "X", 1);
 }
 
@@ -876,8 +934,13 @@ uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2], unsigned int
     unsigned int index = 0, j = 0;
     uint8_t *tmp, *cipher;
     uint8_t swap_tmp[S / 2];
-    int padding_size;
+        int padding_size;
     int plain_size = size;
+    unsigned int k = 0;
+    for (k = 0; k < n; k++)
+    {
+        memcpy(keys[k], generate__key(S / 2), S / 2); //4 bytes key (32bits)
+    }
     if (plain_size % S != 0)
     {
 
@@ -965,11 +1028,7 @@ void feistel_main(uint8_t *plaintext, unsigned int size)
 {
     uint8_t keys[n][S / 2];
     uint8_t *cipher, *plain;
-    unsigned int i = 0;
-    for (i = 0; i < n; i++)
-    {
-        memcpy(keys[i], generate__key(S / 2), S / 2); //4 bytes key (32bits)
-    }
+   
     cipher = feistel_encrypt(plaintext, keys, size);
     plain = feistel_decrypt(cipher, keys, size);
     fprintf(stdout, "\n========CIPHERTEXT=======================  \n\n");
