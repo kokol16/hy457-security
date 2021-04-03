@@ -28,12 +28,12 @@ typedef struct letter_position
      int col;
 } letter_position;
 
-
+short is_invalid_input(unsigned char * plaintext , unsigned int size);
 unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key , unsigned int size);
 unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key , unsigned int size );
 unsigned char **playfair_keymatrix(unsigned char *key , unsigned int size);
 static void find_row_col(letter_position *let1_pos, letter_position *let2_pos, char let1, char let2, unsigned char **matrix_key);
-static unsigned char *eliminate_duplicates_from_key(unsigned char *key);
+static unsigned char *eliminate_duplicates_from_key(unsigned char *key , unsigned int size);
 static unsigned char *generate_upper_letters_array();
 static unsigned char **allocate_matrix(unsigned int row, unsigned int col);
 static void print_matrix(unsigned char **matrix);
@@ -66,9 +66,8 @@ uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S/2],unsigned int p
 
 //general
 
-static void print_bytes(FILE *fp, uint8_t *msg);
 static void print_by_size(FILE *fp, uint8_t *msg , unsigned int size, short AsBytes);
+static void print_on_pairs(FILE *fp, uint8_t *msg , unsigned int size, short AsBytes);
 
-static int isslash(uint8_t *text, unsigned int index);
 static uint8_t *generate__key(int length);
 

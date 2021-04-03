@@ -305,7 +305,7 @@ uint8_t *caesar_decrypt(uint8_t *ciphertext, ushort N, unsigned int plain_size)
     {
         if (isupper(ciphertext[index]) || islower(ciphertext[index]) || isdigit(ciphertext[index]))
         {
-            plaintext[index] = alphabet[modulo(indexing_arr[ciphertext[index]] - N, ALPHABET_SIZE + 1)]; 
+            plaintext[index] = alphabet[modulo(indexing_arr[ciphertext[index]] - N, ALPHABET_SIZE + 1)];
         }
         else
         {
@@ -353,14 +353,23 @@ void main_ceasar(unsigned int count_bytes, uint8_t *plaintext)
     free(ciphertext);
 }
 
-unsigned char *eliminate_duplicates_from_key(unsigned char *key)
+/**
+ * @brief  This method create a key , from the original
+ * by removing the letters that exist more than one time
+ * and converting the J to I
+ * example : LALAFFJ -> LAFI
+ * @param key The original key
+ * @return unsigned char* the key without duplicates
+ */
+unsigned char *eliminate_duplicates_from_key(unsigned char *key, unsigned int size)
 {
     short ascii_upper_let[91] = {0};
     unsigned int index = 0, key_index = 0, pos = 0;
-    int key_length = strlen(key);
+    int key_length = size;
     unsigned char *clean_key = malloc(sizeof(char) * key_length + 1);
+    //printf("size : %u\n", size);
     memcpy(clean_key, key, key_length + 1);
-    while (clean_key[index] != '\0')
+    while (index < size)
     {
         if (ascii_upper_let[clean_key[index]] != 1)
         {
@@ -382,6 +391,12 @@ unsigned char *eliminate_duplicates_from_key(unsigned char *key)
     clean_key[pos] = '\0';
     return clean_key;
 }
+/**
+ * @brief This method creates an array with all the 
+ * upper case characters
+ * example : A[0]='A'
+ * @return unsigned char* return the filled array
+ */
 unsigned char *generate_upper_letters_array()
 {
     int i = 0;
@@ -393,6 +408,13 @@ unsigned char *generate_upper_letters_array()
     return upper_letters;
 }
 
+/**
+ * @brief This method allocates memory for a 2d array
+ * size of row x col
+ * @param row rows of array
+ * @param col columns of array
+ * @return unsigned char** The allocated 2d array
+ */
 unsigned char **allocate_matrix(unsigned int row, unsigned int col)
 {
     unsigned char **matrix;
@@ -404,9 +426,15 @@ unsigned char **allocate_matrix(unsigned int row, unsigned int col)
     }
     return matrix;
 }
+/**
+ * @brief This method prints a 2d array
+ * 
+ * @param matrix The key matrix
+ */
 void print_matrix(unsigned char **matrix)
 {
     unsigned int row, col;
+    if(matrix==NULL){return;}
     for (row = 0; row < PLAYFAIR_ROW; row++)
     {
         for (col = 0; col < PLAYFAIR_COL; col++)
@@ -416,6 +444,13 @@ void print_matrix(unsigned char **matrix)
         fprintf(stdout, "%s", "\n-----\n");
     }
 }
+/**
+ * @brief This method generates the playfair key matrix
+ * 
+ * @param key The key from which the array will be created
+ * @param size the size of the key
+ * @return unsigned char** The key matrix
+ */
 unsigned char **playfair_keymatrix(unsigned char *key, unsigned int size)
 {
     unsigned char **key_matrix = allocate_matrix(PLAYFAIR_ROW, PLAYFAIR_COL);
@@ -423,19 +458,23 @@ unsigned char **playfair_keymatrix(unsigned char *key, unsigned int size)
     int ascii_upper_let[91] = {0};
     unsigned int pos = 0;
 
-    //sanitize_upper(key, size);
-    print_by_size(stdout, key, size, 0);
-    unsigned char *clean_key = eliminate_duplicates_from_key(key);
+    if (is_invalid_input(key, size))
+    {
+        fprintf(stderr, "INVALID INPUT ONLY UPPER CASE CHARACTERS ARE ACCEPTABLE!!!\n");
+        return NULL;
+    }
 
+    unsigned char *clean_key = eliminate_duplicates_from_key(key, size);
     int key_length = strlen(clean_key);
+
     unsigned char *upper_letters = generate_upper_letters_array();
-    //memset(ascii_upper_let, 0, 90);
     for (row = 0; row < PLAYFAIR_ROW; row++)
     {
         for (col = 0; col < PLAYFAIR_COL; col++)
         {
             if (index < key_length)
             {
+                /* place tthe input key on matrix*/
                 if (clean_key[index] == 'I')
                 {
                     key_matrix[row][col] = 'I';
@@ -445,6 +484,8 @@ unsigned char **playfair_keymatrix(unsigned char *key, unsigned int size)
                 else
                 {
                     key_matrix[row][col] = clean_key[index];
+                    /* mark the character that we inserted on matrix
+                     in order not to place it again inside the matrix*/
                     ascii_upper_let[clean_key[index]] = 1;
                 }
 
@@ -452,13 +493,15 @@ unsigned char **playfair_keymatrix(unsigned char *key, unsigned int size)
             }
             else
             {
-                //dietrexe upper letters kai bale mesa opoio boreis
+                /* traverse all the upper letters and fill the matrix
+                with one's that hasn't already been inserted*/
                 while (1)
                 {
                     if (pos > 25)
                     {
                         break;
                     }
+                    /* check if the character is already inserted*/
                     if (ascii_upper_let[upper_letters[pos]] == 0)
                     {
                         if (upper_letters[pos] == 'J' || upper_letters[pos] == 'I')
@@ -472,9 +515,7 @@ unsigned char **playfair_keymatrix(unsigned char *key, unsigned int size)
                             key_matrix[row][col] = upper_letters[pos];
                             ascii_upper_let[upper_letters[pos]] = 1;
                         }
-
                         pos++;
-
                         break;
                     }
                     pos++;
@@ -484,13 +525,24 @@ unsigned char **playfair_keymatrix(unsigned char *key, unsigned int size)
     }
     return key_matrix;
 }
-
+/**
+ * @brief This method is used to make the plaintext
+ * even size by adding a 'X' on the end
+ * 
+ * @param plaintext The input text
+ * @param size size of the text
+ */
 void make_plaintext_even(unsigned char *plaintext, unsigned int size)
 {
     plaintext = (char *)realloc(plaintext, size + 1);
     memcpy(plaintext + size, "X", 1);
 }
-
+/**
+ * @brief This method is used to replace 'J' on plaintext with 'I'
+ * 
+ * @param plaintext The input text
+ * @param size size of the text
+ */
 void make_J_to_I(unsigned char *plaintext, unsigned int size)
 {
     unsigned int index = 0;
@@ -504,6 +556,13 @@ void make_J_to_I(unsigned char *plaintext, unsigned int size)
     }
 }
 
+/**
+ * @brief This method is used to find if there is a pair of 2 same letters
+ * and replacing the one letter with X
+ * Example : AALL -> AXLX
+ * @param plaintext The input text
+ * @param size The size of the text
+ */
 void add_X_on_duplicates(unsigned char *plaintext, unsigned int size)
 {
     unsigned int index = 0, x_index = 0;
@@ -516,7 +575,15 @@ void add_X_on_duplicates(unsigned char *plaintext, unsigned int size)
         index += 2;
     }
 }
-
+/**
+ * @brief This method checks if the two letter are on the same
+ * row on the matrix and changes their values for encryption
+ * 
+ * @param letter1 
+ * @param letter2 
+ * @param matrix_key 
+ * @return short True or False
+ */
 short is_letters_on_same_row(char *letter1, char *letter2, unsigned char **matrix_key)
 {
     letter_position let1_pos, let2_pos;
@@ -555,6 +622,16 @@ short is_letters_on_same_row(char *letter1, char *letter2, unsigned char **matri
         return 0;
     }
 }
+/**
+ * @brief This method is used to find the row and the column
+ * of the two letters in matrix
+ * 
+ * @param let1_pos 
+ * @param let2_pos 
+ * @param let1 
+ * @param let2 
+ * @param matrix_key 
+ */
 void find_row_col(letter_position *let1_pos, letter_position *let2_pos, char let1, char let2, unsigned char **matrix_key)
 {
     unsigned int row, col;
@@ -581,7 +658,15 @@ void find_row_col(letter_position *let1_pos, letter_position *let2_pos, char let
         }
     }
 }
-
+/**
+ * @brief This method checks if the two letters are in
+ * the same column on the matrix and change them for encryption
+ * 
+ * @param letter1 
+ * @param letter2 
+ * @param matrix_key 
+ * @return short True of False
+ */
 short is_letters_on_same_col(char *letter1, char *letter2, unsigned char **matrix_key)
 {
     letter_position let1_pos, let2_pos;
@@ -620,7 +705,14 @@ short is_letters_on_same_col(char *letter1, char *letter2, unsigned char **matri
         return 0;
     }
 }
-
+/**
+ * @brief This method encrypt the two letters
+ * with the rule of the rectangle
+ * 
+ * @param letter1 
+ * @param letter2 
+ * @param matrix_key 
+ */
 void rectangle_encrypt(char *letter1, char *letter2, unsigned char **matrix_key)
 {
     letter_position let1_pos, let2_pos;
@@ -632,7 +724,15 @@ void rectangle_encrypt(char *letter1, char *letter2, unsigned char **matrix_key)
     *letter1 = matrix_key[let1_pos.row][let2_pos.col];
     *letter2 = matrix_key[let2_pos.row][let1_pos.col];
 }
-
+/**
+ * @brief This method checks if the two letter are on the same
+ * row on the matrix and changes their values for decryption
+ * 
+ * @param letter1 
+ * @param letter2 
+ * @param matrix_key 
+ * @return short True or False
+ */
 short is_letters_on_same_row_decrypt(char *letter1, char *letter2, unsigned char **matrix_key)
 {
     letter_position let1_pos, let2_pos;
@@ -674,6 +774,15 @@ short is_letters_on_same_row_decrypt(char *letter1, char *letter2, unsigned char
         return 0;
     }
 }
+/**
+ * @brief This method checks if the two letters are in
+ * the same column on the matrix and change them for decryption
+ * 
+ * @param letter1 
+ * @param letter2 
+ * @param matrix_key 
+ * @return short True of False
+ */
 short is_letters_on_same_col_decrypt(char *letter1, char *letter2, unsigned char **matrix_key)
 {
 
@@ -713,6 +822,14 @@ short is_letters_on_same_col_decrypt(char *letter1, char *letter2, unsigned char
         return 0;
     }
 }
+/**
+ * @brief This method decrypt the two letters
+ * with the rule of the rectangle
+ * 
+ * @param letter1 
+ * @param letter2 
+ * @param matrix_key 
+ */
 void rectangle_decrypt(char *letter1, char *letter2, unsigned char **matrix_key)
 {
     letter_position let1_pos, let2_pos;
@@ -724,7 +841,13 @@ void rectangle_decrypt(char *letter1, char *letter2, unsigned char **matrix_key)
     *letter1 = matrix_key[let1_pos.row][let2_pos.col];
     *letter2 = matrix_key[let2_pos.row][let1_pos.col];
 }
-
+/**
+ * @brief This method removes non upper case characters from
+ * the plaintext
+ * 
+ * @param plaintext 
+ * @param size 
+ */
 void sanitize_upper(unsigned char *plaintext, unsigned int size)
 {
     unsigned int valid_input_index = 0, index = 0;
@@ -744,10 +867,31 @@ void sanitize_upper(unsigned char *plaintext, unsigned int size)
     }
     memset(plaintext + valid_input_index, 0, size - valid_input_index);
 }
+
+short is_invalid_input(unsigned char *plaintext, unsigned int size)
+{
+    unsigned int index = 0;
+    while (index < size)
+    {
+        if (!isupper(plaintext[index++]))
+            return 1;
+    }
+    return 0;
+}
+/**
+ * @brief This method encrypt the plaintext using playfair algorithm
+ * 
+ * @param plaintext 
+ * @param key 
+ * @param size 
+ * @return unsigned char* The encrypted text
+ */
 unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key, unsigned int size)
 {
     unsigned char *tmp_plaintext;
     unsigned int index = 0;
+    if (key == NULL)
+        return NULL;
     if (size % 2 != 0)
     {
         make_plaintext_even(plaintext, size);
@@ -755,8 +899,7 @@ unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key, u
     }
     tmp_plaintext = malloc(sizeof(char) * size);
     memcpy(tmp_plaintext, plaintext, size);
-    print_by_size(stdout, tmp_plaintext, size, 1);
-
+    //print_by_size(stdout, tmp_plaintext, size, 0);
     add_X_on_duplicates(tmp_plaintext, size);
     make_J_to_I(tmp_plaintext, size);
     while (index < size)
@@ -774,17 +917,23 @@ unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key, u
         index += 2;
     }
 
-    //printf("cipher : ");
-
-    //print_with_space(stdout, tmp_plaintext);
-
     return tmp_plaintext;
 }
-
+/**
+ * @brief This method decrypt the plaintext using playfair algorithm
+ * 
+ * @param ciphertext 
+ * @param key 
+ * @param size 
+ * @return unsigned char* The origian text
+ */
 unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key, unsigned int size)
 {
     unsigned char *tmp_plaintext;
     unsigned int index = 0;
+    if (key == NULL)
+        return NULL;
+
     if (size % 2 != 0)
     {
         size += 1;
@@ -796,7 +945,6 @@ unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key, 
 
     while (index < size)
     {
-        //printf("index %u\n",index);
         if (is_letters_on_same_row_decrypt(&tmp_plaintext[index], &tmp_plaintext[index + 1], key))
         {
         }
@@ -811,12 +959,19 @@ unsigned char *playfair_decrypt(unsigned char *ciphertext, unsigned char **key, 
     }
     return tmp_plaintext;
 }
+/**
+ * @brief This is the main program for playfair algorithm
+ * 
+ * @param key 
+ * @param size 
+ */
 void main_playfair(unsigned char *key, unsigned int size)
 {
     unsigned char **key_matrix;
     unsigned char *ciphertext, *plaintext;
     fprintf(stdout, "matrix : \n");
     key_matrix = playfair_keymatrix(key, size);
+    
     print_matrix(key_matrix);
 
     ciphertext = playfair_encrypt(key, key_matrix, size);
@@ -824,31 +979,37 @@ void main_playfair(unsigned char *key, unsigned int size)
 
     fprintf(stdout, "\n========CIPHERTEXT=======================  \n\n");
     fprintf(stdout, "========normal========================== \n");
-    print_by_size(stdout, ciphertext, size, 0);
+    print_on_pairs(stdout, ciphertext, size + 1, 0);
 
     fprintf(stdout, "========hex============================= \n");
 
-    print_by_size(stdout, ciphertext, size, 1);
+    print_on_pairs(stdout, ciphertext, size + 1, 1);
     fprintf(stdout, "\n========PLAINTEXT=======================  \n\n");
 
     fprintf(stdout, "========normal========================== \n");
 
-    print_by_size(stdout, plaintext, size, 0);
+    print_on_pairs(stdout, plaintext, size + 1, 0);
     fprintf(stdout, "========hex============================= \n");
 
-    print_by_size(stdout, plaintext, size, 1);
+    print_on_pairs(stdout, plaintext, size + 1, 1);
 
     //free(plaintext);
     //free(ciphertext);
 }
 
+/**
+ * @brief This method encrypt the plaintext using affine algorithm
+ * 
+ * @param plaintext 
+ * @param size 
+ * @return uint8_t* The encrypted text
+ */
 uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
 {
     uint8_t *ciphertext;
     unsigned int index = 0, cipher_index = 0;
     unsigned int x;
     unsigned int res;
-    //uint8_t *plain_sanitized = affine_sanitize_input(plaintext, size);
     ciphertext = malloc(sizeof(uint8_t) * size);
     while (index < size)
     {
@@ -866,6 +1027,14 @@ uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
     }
     return ciphertext;
 }
+
+/**
+ * @brief This method decrypts the plaintext using affine algorithm
+ * 
+ * @param plaintext 
+ * @param size 
+ * @return uint8_t* The decrypted text
+ */
 uint8_t *affine_decrypt(uint8_t *ciphertext, unsigned int size)
 {
     int x, a_inverse;
@@ -893,7 +1062,12 @@ uint8_t *affine_decrypt(uint8_t *ciphertext, unsigned int size)
     }
     return plaitext_tmp;
 }
-
+/**
+ * @brief The main program for affine algorithm
+ * 
+ * @param plaintext 
+ * @param size 
+ */
 void affine_main(unsigned char *plaintext, unsigned int size)
 {
     uint8_t *ciphertext, *plain_text;
@@ -934,7 +1108,7 @@ uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2], unsigned int
     unsigned int index = 0, j = 0;
     uint8_t *tmp, *cipher;
     uint8_t swap_tmp[S / 2];
-        int padding_size;
+    int padding_size;
     int plain_size = size;
     unsigned int k = 0;
     for (k = 0; k < n; k++)
@@ -1028,7 +1202,7 @@ void feistel_main(uint8_t *plaintext, unsigned int size)
 {
     uint8_t keys[n][S / 2];
     uint8_t *cipher, *plain;
-   
+
     cipher = feistel_encrypt(plaintext, keys, size);
     plain = feistel_decrypt(cipher, keys, size);
     fprintf(stdout, "\n========CIPHERTEXT=======================  \n\n");
@@ -1117,19 +1291,39 @@ int main(int argc, char **argv)
     return 0;
 }
 
-static void print_bytes(FILE *fp, uint8_t *msg)
+/**
+ * @brief This method prints the text on pairs of 2 characters
+ * 
+ * @param fp output stream
+ * @param msg text to printt
+ * @param size size of msg
+ * @param AsBytes print as bytes or chars
+ */
+void print_on_pairs(FILE *fp, uint8_t *msg, unsigned int size, short AsBytes)
 {
     if (msg == NULL)
     {
         return;
     }
-    uint8_t *tmp_msg = msg;
-    while (*tmp_msg != '\0')
+
+    unsigned int index = 0;
+    while (index < size)
     {
+        if (AsBytes)
+        {
 
-        fprintf(fp, "%x ", *tmp_msg);
+            fprintf(fp, "%x", msg[index]);
+            fprintf(fp, "%x ", msg[index + 1]);
+        }
 
-        tmp_msg++;
+        else
+        {
+
+            fprintf(fp, "%c", msg[index]);
+            fprintf(fp, "%c ", msg[index + 1]);
+        }
+
+        index += 2;
     }
     fprintf(fp, "%c", '\n');
 }
