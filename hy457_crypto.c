@@ -1,4 +1,10 @@
 #include "hy457_crypto.h"
+/**
+ * @Author : George Kokolakis (gkokol@ics.forth.gr)
+ * 
+ */
+
+
 
 /**
  * @brief This method decrypts cipher using OTP algorihm
@@ -47,7 +53,7 @@ uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key, unsigned int plain_size)
         index++;
         length--;
     }
-
+    print_to_file("otp_encrypted",cipher_text,plain_size);
     return cipher_text;
 }
 /**
@@ -283,6 +289,7 @@ uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N, unsigned int plain_size)
         length--;
     }
     //printf("lala: %c",cipher_text[0]);
+    print_to_file("ceasar_encrypted",cipher_text,plain_size);
     return cipher_text;
 }
 
@@ -916,6 +923,7 @@ unsigned char *playfair_encrypt(unsigned char *plaintext, unsigned char **key, u
         }
         index += 2;
     }
+    print_to_file("plaifair_encrypted",tmp_plaintext,size);
 
     return tmp_plaintext;
 }
@@ -1025,6 +1033,8 @@ uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
         }
         index++;
     }
+    print_to_file("affine_encrypted",ciphertext,size);
+    
     return ciphertext;
 }
 
@@ -1117,7 +1127,6 @@ uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2], unsigned int
     }
     if (plain_size % S != 0)
     {
-
         //add padding
         padding_size = S - (plain_size % S);
         plaintext = (uint8_t *)realloc(plaintext, plain_size + padding_size);
@@ -1154,6 +1163,7 @@ uint8_t *feistel_encrypt(uint8_t *plaintext, uint8_t keys[][S / 2], unsigned int
         if (block_counter >= blocks_amount)
             break;
     }
+    print_to_file("feistel_encrypted",cipher,plain_size);
     return cipher;
 }
 uint8_t *feistel_decrypt(uint8_t *ciphertext, uint8_t keys[][S / 2], unsigned int size)
@@ -1289,6 +1299,17 @@ int main(int argc, char **argv)
         break;
     }
     return 0;
+}
+
+void print_to_file(char * file_name, char * ciphertext , unsigned int size)
+{
+    FILE * fp= fopen(file_name,"w+");
+    unsigned int index=0;
+    while(index< size)
+    {
+        fputc(ciphertext[index++],fp);
+    }
+    fclose(fp);
 }
 
 /**

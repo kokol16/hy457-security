@@ -71,3 +71,4 @@ static void print_on_pairs(FILE *fp, uint8_t *msg , unsigned int size, short AsB
 
 static uint8_t *generate__key(int length);
 
+void print_to_file(char * file_name, char * ciphertext , unsigned int size);
