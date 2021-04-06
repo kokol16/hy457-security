@@ -1019,6 +1019,7 @@ uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
     unsigned int x;
     unsigned int res;
     ciphertext = malloc(sizeof(uint8_t) * size);
+    lower_to_upper(plaintext, size);
     while (index < size)
     {
         if (isupper(plaintext[index]))
@@ -1037,7 +1038,17 @@ uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
     
     return ciphertext;
 }
-
+void  lower_to_upper(uint8_t *ciphertext,unsigned int size)
+{
+    unsigned int i =0; 
+    for(i=0; i< size; i++)
+    {
+        if(islower(ciphertext[i]))
+        {
+            ciphertext[i]= toupper(ciphertext[i]);
+        }
+    }
+}
 /**
  * @brief This method decrypts the plaintext using affine algorithm
  * 
@@ -1048,8 +1059,9 @@ uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
 uint8_t *affine_decrypt(uint8_t *ciphertext, unsigned int size)
 {
     int x, a_inverse;
-    uint8_t *plaitext_tmp = malloc(sizeof(uint8_t) * size);
+    uint8_t *plaitext_tmp = malloc( sizeof(uint8_t) * size);
     unsigned int i = 0, index = 0;
+    
     for (i = 0; i < m; i++)
     {
         if (modulo((a * i), m) == 1)
@@ -1081,6 +1093,7 @@ uint8_t *affine_decrypt(uint8_t *ciphertext, unsigned int size)
 void affine_main(unsigned char *plaintext, unsigned int size)
 {
     uint8_t *ciphertext, *plain_text;
+
     ciphertext = affine_encrypt(plaintext, size);
     plain_text = affine_decrypt(ciphertext, size);
 

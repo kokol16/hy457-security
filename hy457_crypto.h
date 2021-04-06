@@ -56,7 +56,7 @@ static void sanitize_upper(unsigned char *plaintext , unsigned int index);
 #define m 26
 uint8_t *affine_encrypt(uint8_t *plaintext ,unsigned int size );
 uint8_t *affine_decrypt(uint8_t *ciphertext , unsigned int size);
-
+void  lower_to_upper(uint8_t *ciphertext,unsigned int size);
 //feister cipher
 #define n 8
 #define S 8 //(64 bits)
