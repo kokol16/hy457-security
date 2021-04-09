@@ -1,11 +1,2 @@
-Introduction
-In this assignment you are going to implement from scratch, using C, a simple cryptographic
-library named cs457_crypto. The cryptographic library will provide four basic but fundamental
-cryptographic algorithms, (i) One-time pad, (ii) Caesar’s cipher, (iii) Playfair cipher, (iv) Affine
-cipher and (v) Feistel cipher. The main purpose of this assignment is to offer you the opportunity
-to get familiar with the implementation and internals of such simple ciphers and help you
-understand the development decisions and tricks that developers have to deal with when
-implementing security critical functions that, at first, seem trivial to develop.
-The cs457_crypto library will consist of two files. The cs457_crypto.h, which contains the C
-function declarations and any macro definitions you think are important and the cs457_crypto.c
-file, containing the implementation of the above algorithms.
+eimai omor\\fos
+eimaiomorfos

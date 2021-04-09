@@ -275,6 +275,8 @@ uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N, unsigned int plain_size)
     uint8_t *cipher_text = malloc(length * sizeof(uint8_t));
     uint8_t *alphabet = create_alphabet();
     int *indexing_arr = create_indexing_array();
+    plaintext=        otp_sanitize_input(plaintext, plain_size);
+
     while (length > 0)
     {
         if (isupper(plaintext[index]) || islower(plaintext[index]) || isdigit(plaintext[index]))
@@ -1020,6 +1022,7 @@ uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
     unsigned int res;
     ciphertext = malloc(sizeof(uint8_t) * size);
     lower_to_upper(plaintext, size);
+    plaintext=        otp_sanitize_input(plaintext, size);
     while (index < size)
     {
         if (isupper(plaintext[index]))
