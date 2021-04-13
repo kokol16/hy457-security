@@ -12,7 +12,6 @@
 //otp
 uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key , unsigned int plain_size);
 uint8_t *otp_decrypt(uint8_t *ciphertext, uint8_t *key , unsigned int plain_size );
-uint8_t *otp_sanitize_input(uint8_t * plaintext,unsigned int plain_size);
 
 //ceasar
 #define OFFSET 4
@@ -72,3 +71,4 @@ static void print_on_pairs(FILE *fp, uint8_t *msg , unsigned int size, short AsB
 static uint8_t *generate__key(int length);
 
 void print_to_file(char * file_name, char * ciphertext , unsigned int size);
+uint8_t *sanitize_input(uint8_t * plaintext,unsigned int plain_size);

@@ -42,7 +42,7 @@ uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key, unsigned int plain_size)
     unsigned int index = 0, length = 0;
     uint8_t *cipher_text;
     //uint8_t *cipher_text = malloc(length * sizeof(uint8_t));
-    uint8_t *plain_sanitized = otp_sanitize_input(plaintext, plain_size);
+    uint8_t *plain_sanitized = sanitize_input(plaintext, plain_size);
     length = plain_size;
     cipher_text = malloc(sizeof(uint8_t) * plain_size);
 
@@ -65,7 +65,7 @@ uint8_t *otp_encrypt(uint8_t *plaintext, uint8_t *key, unsigned int plain_size)
  * @param plain_size The size of the text
  * @return uint8_t* The plaintext after sanitization
  */
-uint8_t *otp_sanitize_input(uint8_t *plaintext, unsigned int plain_size)
+uint8_t *sanitize_input(uint8_t *plaintext, unsigned int plain_size)
 {
     uint8_t *sanitized_plain;
     unsigned int index = 0, sanit_index = 0;
@@ -82,11 +82,10 @@ uint8_t *otp_sanitize_input(uint8_t *plaintext, unsigned int plain_size)
 
         index++;
     }
-    if (sanit_index < length - 1)
+    if (sanit_index < length)
     {
         memset(sanitized_plain + sanit_index, 0, length - sanit_index);
     }
-
     fprintf(stdout, "\n========SANITIZED PLAINTEXT=============  \n\n");
     fprintf(stdout, "========normal========================== \n");
     print_by_size(stdout, sanitized_plain, plain_size, 0);
@@ -275,7 +274,7 @@ uint8_t *caesar_encrypt(uint8_t *plaintext, ushort N, unsigned int plain_size)
     uint8_t *cipher_text = malloc(length * sizeof(uint8_t));
     uint8_t *alphabet = create_alphabet();
     int *indexing_arr = create_indexing_array();
-    plaintext=        otp_sanitize_input(plaintext, plain_size);
+    plaintext=        sanitize_input(plaintext, plain_size);
 
     while (length > 0)
     {
@@ -1022,7 +1021,7 @@ uint8_t *affine_encrypt(uint8_t *plaintext, unsigned int size)
     unsigned int res;
     ciphertext = malloc(sizeof(uint8_t) * size);
     lower_to_upper(plaintext, size);
-    plaintext=        otp_sanitize_input(plaintext, size);
+    plaintext=        sanitize_input(plaintext, size);
     while (index < size)
     {
         if (isupper(plaintext[index]))
